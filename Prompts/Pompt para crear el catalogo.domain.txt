@@ -1,0 +1,8 @@
+En src/Catalogo.Domain aplica DDD tactico y crea: 
+ 1. Exepciones.cs con dos excepciones: ValidacionDominioException(dato invalido) y ReglaNegocioException(regla violada por el estado actual)
+ 2. CodigoLibro como Value Object: sealed record, constructor privado, metodo estatico "Crear(String?)". Reglas: no permita vacio,
+ trim, mayusculas, usar el prefijo "LIB-" (si ya lo trae no se debe de duplicar en el texto, "LIB-" solo es invalido). Inmutable.
+ 3. Libro como Entidad: Id(int), codigo, titulo, Activo, todas estas variables tienen su setter privado. Un libro nuevo inicia Activo.
+ Titulo no puede estar vacio (se debe de validar al crear y editar en CambiarTitulo()). Desactivar() lanza una ReglaNegocioExceptionsi ya esta inactivo.
+
+ No uses atributos ni librerias externas. Dominio puro. Y por ultimo compila al terminar.
