@@ -11,7 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Prestamos.Domain\Prestamos.Domain.csproj" />
+    <ProjectReference Include="..\Prestamos.Application\Prestamos.Application.csproj" />
+    <ProjectReference Include="..\Prestamos.Infrastructure\Prestamos.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

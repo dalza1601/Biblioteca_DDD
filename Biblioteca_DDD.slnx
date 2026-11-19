@@ -1,9 +1,13 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Catalogo.Api/Catalogo.Api.csproj" />
+    <Project Path="src/Catalogo.Application/Catalogo.Application.csproj" />
     <Project Path="src/Catalogo.Domain/Catalogo.Domain.csproj" />
+    <Project Path="src/Catalogo.Infrastructure/Catalogo.Infrastructure.csproj" />
     <Project Path="src/Prestamos.Api/Prestamos.Api.csproj" />
+    <Project Path="src/Prestamos.Application/Prestamos.Application.csproj" />
     <Project Path="src/Prestamos.Domain/Prestamos.Domain.csproj" />
+    <Project Path="src/Prestamos.Infrastructure/Prestamos.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Biblioteca.Tests/Biblioteca.Tests.csproj" />
