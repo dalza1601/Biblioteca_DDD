@@ -6,6 +6,10 @@ namespace Prestamos.Domain;
 /// </summary>
 public sealed class Prestamo
 {
+    // TEMPORAL: mientras no exista persistencia, el Id se asigna con un contador en memoria (1, 2, 3...).
+    // Al implementar la base de datos, el Id lo generará la persistencia y este contador debe eliminarse.
+    private static int _ultimoId;
+
     public int Id { get; private set; }
     public int LibroId { get; private set; }
     public CodigoLector Lector { get; private set; }
@@ -16,6 +20,7 @@ public sealed class Prestamo
 
     private Prestamo(int libroId, CodigoLector lector, DateOnly fechaInicio, DateOnly fechaLimite)
     {
+        Id = Interlocked.Increment(ref _ultimoId);
         LibroId = libroId;
         Lector = lector;
         FechaInicio = fechaInicio;

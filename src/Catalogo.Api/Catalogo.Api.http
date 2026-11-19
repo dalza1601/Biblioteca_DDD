@@ -1,6 +1,17 @@
-﻿@Catalogo.Api_HostAddress = http://localhost:5101
+@Catalogo.Api_HostAddress = http://localhost:5101
 
-GET {{Catalogo.Api_HostAddress}}/weatherforecast/
+### Listar libros
+GET {{Catalogo.Api_HostAddress}}/libros
 Accept: application/json
 
-###
+### Registrar libro
+POST {{Catalogo.Api_HostAddress}}/libros
+Content-Type: application/json
+
+{
+  "codigo": "abc-001",
+  "titulo": "Domain-Driven Design"
+}
+
+### Desactivar libro
+POST {{Catalogo.Api_HostAddress}}/libros/1/desactivar

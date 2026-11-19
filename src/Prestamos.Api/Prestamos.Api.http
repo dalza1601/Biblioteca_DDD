@@ -1,6 +1,24 @@
-﻿@Prestamos.Api_HostAddress = http://localhost:5102
+@Prestamos.Api_HostAddress = http://localhost:5102
 
-GET {{Prestamos.Api_HostAddress}}/weatherforecast/
+### Listar préstamos
+GET {{Prestamos.Api_HostAddress}}/prestamos
 Accept: application/json
 
-###
+### Registrar préstamo
+POST {{Prestamos.Api_HostAddress}}/prestamos
+Content-Type: application/json
+
+{
+  "libroId": 1,
+  "lector": "est-001",
+  "fechaInicio": "2026-11-18",
+  "fechaLimite": "2026-11-25"
+}
+
+### Devolver préstamo
+POST {{Prestamos.Api_HostAddress}}/prestamos/1/devolver
+Content-Type: application/json
+
+{
+  "fechaDevolucion": "2026-11-20"
+}

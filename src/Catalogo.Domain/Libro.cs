@@ -5,6 +5,10 @@ namespace Catalogo.Domain;
 /// </summary>
 public sealed class Libro
 {
+    // TEMPORAL: mientras no exista persistencia, el Id se asigna con un contador en memoria (1, 2, 3...).
+    // Al implementar la base de datos, el Id lo generará la persistencia y este contador debe eliminarse.
+    private static int _ultimoId;
+
     public int Id { get; private set; }
     public CodigoLibro Codigo { get; private set; }
     public string Titulo { get; private set; }
@@ -12,6 +16,7 @@ public sealed class Libro
 
     private Libro(CodigoLibro codigo, string titulo)
     {
+        Id = Interlocked.Increment(ref _ultimoId);
         Codigo = codigo;
         Titulo = titulo;
         Activo = true;
