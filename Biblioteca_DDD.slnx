@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/demos/">
+    <Project Path="demos/Biblioteca.GrpcDemo.Cliente/Biblioteca.GrpcDemo.Cliente.csproj" />
+    <Project Path="demos/Biblioteca.GrpcDemo/Biblioteca.GrpcDemo.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Catalogo.Api/Catalogo.Api.csproj" />
     <Project Path="src/Catalogo.Application/Catalogo.Application.csproj" />

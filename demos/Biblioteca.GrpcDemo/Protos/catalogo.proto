@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option csharp_namespace = "Biblioteca.GrpcDemo";
+
+package catalogo;
+
+// Contrato gRPC de la demostración: consulta de un libro del catálogo.
+// Lo comparten el servidor (GrpcServices="Server") y el cliente de consola (GrpcServices="Client").
+service ConsultasCatalogo {
+  rpc ConsultarLibro (LibroRequest) returns (LibroReply);
+}
+
+message LibroRequest {
+  // Identificador del libro en formato Guid (texto). Si no es un Guid válido: InvalidArgument.
+  string id = 1;
+}
+
+message LibroReply {
+  bool existe = 1;
+  bool activo = 2;
+  string titulo = 3;
+}

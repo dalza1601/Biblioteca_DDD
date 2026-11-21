@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Catalogo.Domain\Catalogo.Domain.csproj" />
     <ProjectReference Include="..\..\src\Prestamos.Domain\Prestamos.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Prestamos.Api\Prestamos.Api.csproj" />
   </ItemGroup>
 
 </Project>

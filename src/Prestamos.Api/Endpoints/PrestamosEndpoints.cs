@@ -1,3 +1,4 @@
+using Prestamos.Api.Aplicacion;
 using Prestamos.Application.Contracts;
 using Prestamos.Application.Services;
 
@@ -21,11 +22,9 @@ public static class PrestamosEndpoints
             Results.Ok(servicio.ObtenerPorId(id)))
             .WithName("ObtenerPrestamo");
 
-        prestamos.MapPost("/", (RegistrarPrestamoComando comando, ServicioPrestamos servicio) =>
-        {
-            var prestamo = servicio.Registrar(comando);
-            return Results.Created($"/prestamos/{prestamo.Id}", prestamo);
-        })
+        // Solo llama al caso de uso y traduce su resultado a HTTP.
+        prestamos.MapPost("/", async (RegistrarPrestamoComando comando, RegistrarPrestamo casoDeUso, CancellationToken ct) =>
+            PrestamoHttp.Traducir(await casoDeUso.EjecutarAsync(comando, ct)))
         .WithName("RegistrarPrestamo");
 
         prestamos.MapPost("/{id:int}/devolver", (int id, DevolverPrestamoComando comando, ServicioPrestamos servicio) =>

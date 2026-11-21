@@ -27,6 +27,12 @@ public sealed class ManejoExcepcionesMiddleware
         {
             await _siguiente(contexto);
         }
+        catch (OperationCanceledException) when (contexto.RequestAborted.IsCancellationRequested)
+        {
+            // El cliente canceló la petición (CancellationToken): no hay a quién responder
+            // y no es un error del servidor, así que no se registra como 500.
+            return;
+        }
         catch (Exception excepcion) when (!contexto.Response.HasStarted)
         {
             var (statusCode, mensaje) = Traducir(excepcion);
