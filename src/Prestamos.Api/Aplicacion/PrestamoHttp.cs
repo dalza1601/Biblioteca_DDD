@@ -8,10 +8,19 @@ namespace Prestamos.Api.Aplicacion;
 /// </summary>
 public static class PrestamoHttp
 {
+    public const string EncabezadoEventoId = "X-Event-Id";
+    public const string EncabezadoEventoPublicado = "X-Event-Published";
+
     public static IResult Traducir(ResultadoRegistrarPrestamo resultado) => resultado switch
     {
-        ResultadoRegistrarPrestamo.Creado creado =>
+        // 201 + encabezados con el id del evento y si llegó a RabbitMQ.
+        ResultadoRegistrarPrestamo.Creado creado => new ResultadoConEncabezados(
             Results.Created($"/prestamos/{creado.Prestamo.Id}", creado.Prestamo),
+            new Dictionary<string, string>
+            {
+                [EncabezadoEventoId] = creado.EventoId.ToString(),
+                [EncabezadoEventoPublicado] = creado.EventoPublicado ? "true" : "false"
+            }),
 
         ResultadoRegistrarPrestamo.LibroNoDisponible r =>
             Error(StatusCodes.Status409Conflict, $"El libro {r.LibroId} no está disponible para préstamo."),

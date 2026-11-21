@@ -1,7 +1,9 @@
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
-using Prestamos.Api.Integrations;
+using Prestamos.Api.Integrations.Catalogo.Clients;
+using Prestamos.Api.Integrations.Catalogo.Contracts;
+using Prestamos.Api.Integrations.Catalogo.Exceptions;
 
 namespace Biblioteca.Tests.Integracion;
 

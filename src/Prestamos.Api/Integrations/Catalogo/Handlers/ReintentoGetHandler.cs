@@ -1,8 +1,9 @@
 using System.Net;
 
-namespace Prestamos.Api.Integrations;
+namespace Prestamos.Api.Integrations.Catalogo.Handlers;
 
 /// <summary>
+/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> DelegatingHandler (política de reintentos GET)</para>
 /// DelegatingHandler de reintentos para el cliente de Catálogo.
 ///   - Reintenta SOLO peticiones GET (idempotentes) cuando hubo HttpRequestException o respuesta 5xx.
 ///   - Máximo 3 intentos en total, con backoff exponencial entre intentos: 200 ms, 400 ms.

@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using Prestamos.Api.Integrations;
+using Prestamos.Api.Integrations.Mensajeria.Events;
 
 namespace Biblioteca.Tests.Integracion;
 

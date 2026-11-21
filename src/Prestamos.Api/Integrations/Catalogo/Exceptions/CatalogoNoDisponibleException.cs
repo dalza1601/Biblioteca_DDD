@@ -1,6 +1,7 @@
-namespace Prestamos.Api.Integrations;
+namespace Prestamos.Api.Integrations.Catalogo.Exceptions;
 
 /// <summary>
+/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> Excepción de integración (Catálogo no disponible → 503)</para>
 /// Catálogo no se pudo usar: no acepta conexiones o respondió con un error distinto de 404.
 /// </summary>
 public sealed class CatalogoNoDisponibleException : Exception

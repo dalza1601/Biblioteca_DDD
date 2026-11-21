@@ -1,4 +1,5 @@
-using Prestamos.Api.Integrations;
+using Prestamos.Api.Integrations.Catalogo.Clients;
+using Prestamos.Api.Integrations.Catalogo.Contracts;
 
 namespace Biblioteca.Tests.Integracion;
 

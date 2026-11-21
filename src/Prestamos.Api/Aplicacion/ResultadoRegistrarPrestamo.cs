@@ -10,8 +10,11 @@ public abstract record ResultadoRegistrarPrestamo
 {
     private ResultadoRegistrarPrestamo() { }
 
-    /// <summary>Préstamo registrado.</summary>
-    public sealed record Creado(PrestamoDto Prestamo) : ResultadoRegistrarPrestamo;
+    /// <summary>
+    /// Préstamo registrado. EventoId identifica el evento PrestamoRegistrado y EventoPublicado
+    /// indica si llegó a RabbitMQ (si es false, el préstamo igual quedó registrado).
+    /// </summary>
+    public sealed record Creado(PrestamoDto Prestamo, Guid EventoId, bool EventoPublicado) : ResultadoRegistrarPrestamo;
 
     /// <summary>El libro existe en Catálogo pero está inactivo.</summary>
     public sealed record LibroNoDisponible(int LibroId) : ResultadoRegistrarPrestamo;

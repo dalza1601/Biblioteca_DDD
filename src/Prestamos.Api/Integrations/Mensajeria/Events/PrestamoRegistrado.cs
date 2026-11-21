@@ -1,8 +1,9 @@
 using System.Text.Json;
 
-namespace Prestamos.Api.Integrations;
+namespace Prestamos.Api.Integrations.Mensajeria.Events;
 
 /// <summary>
+/// <para><b>Integración:</b> Mensajería (RabbitMQ) · <b>Tipo:</b> Evento de integración (mensaje publicado, routing key prestamo.registrado)</para>
 /// Evento de integración que Préstamos publica cuando registra un préstamo.
 /// Es un contrato público entre servicios: inmutable, versionado y sin datos personales
 /// (no incluye el lector) ni tipos de Prestamos.Domain.

@@ -1,8 +1,11 @@
 using System.Net;
+using Prestamos.Api.Integrations.Catalogo.Contracts;
+using Prestamos.Api.Integrations.Catalogo.Exceptions;
 
-namespace Prestamos.Api.Integrations;
+namespace Prestamos.Api.Integrations.Catalogo.Clients;
 
 /// <summary>
+/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> Cliente HTTP tipado (adaptador)</para>
 /// Cliente HTTP tipado hacia Catálogo. El HttpClient lo crea y configura IHttpClientFactory
 /// (BaseAddress y Timeout vienen de appsettings.json, sección CatalogoApi).
 ///

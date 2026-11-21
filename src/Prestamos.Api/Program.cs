@@ -1,6 +1,9 @@
 using Prestamos.Api.Aplicacion;
 using Prestamos.Api.Endpoints;
-using Prestamos.Api.Integrations;
+using Prestamos.Api.Integrations.Catalogo.Clients;
+using Prestamos.Api.Integrations.Catalogo.Handlers;
+using Prestamos.Api.Integrations.Mensajeria.Options;
+using Prestamos.Api.Integrations.Mensajeria.Publishers;
 using Prestamos.Api.Middleware;
 using Prestamos.Application.IRepository;
 using Prestamos.Application.Services;
@@ -44,6 +47,11 @@ if (catalogoReintentos > 1)
         catalogoReintentos, sp.GetRequiredService<ILogger<ReintentoGetHandler>>()));
     clienteCatalogo.AddHttpMessageHandler<ReintentoGetHandler>();
 }
+
+// Integración con RabbitMQ: opciones enlazadas a la sección "RabbitMq" y un único publicador
+// (Singleton) que comparte conexión y canal. Se conecta de forma perezosa en la primera publicación.
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.Seccion));
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 var app = builder.Build();
 
