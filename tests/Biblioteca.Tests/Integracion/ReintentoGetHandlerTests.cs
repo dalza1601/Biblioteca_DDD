@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
-using Prestamos.Api.Integrations.Catalogo.Clients;
-using Prestamos.Api.Integrations.Catalogo.Exceptions;
-using Prestamos.Api.Integrations.Catalogo.Handlers;
+using Prestamos.Infrastructure.Clients;
+using Prestamos.Application.Exceptions;
+using Prestamos.Infrastructure.Handlers;
 
 namespace Biblioteca.Tests.Integracion;
 
@@ -36,8 +36,8 @@ public class ReintentoGetHandlerTests
             Content = json is null ? null : new StringContent(json, Encoding.UTF8, "application/json")
         });
 
-    private static LibroConsultaClient CrearCliente(HttpClient httpClient) =>
-        new(httpClient, NullLogger<LibroConsultaClient>.Instance);
+    private static CatalogoHttpClient CrearCliente(HttpClient httpClient) =>
+        new(httpClient, NullLogger<CatalogoHttpClient>.Instance);
 
     [Fact]
     public async Task GET_se_recupera_tras_2_fallos_y_devuelve_el_libro()

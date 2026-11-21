@@ -1,7 +1,8 @@
 using Prestamos.Api.Aplicacion;
 using Prestamos.Api.Endpoints;
-using Prestamos.Api.Integrations.Catalogo.Clients;
-using Prestamos.Api.Integrations.Catalogo.Handlers;
+using Prestamos.Application.IClients;
+using Prestamos.Infrastructure.Clients;
+using Prestamos.Infrastructure.Handlers;
 using Prestamos.Api.Integrations.Mensajeria.Options;
 using Prestamos.Api.Integrations.Mensajeria.Publishers;
 using Prestamos.Api.Middleware;
@@ -26,15 +27,19 @@ builder.Services.AddScoped<ServicioPrestamos>();
 // Caso de uso que consulta a Catálogo antes de registrar un préstamo.
 builder.Services.AddScoped<RegistrarPrestamo>();
 
-// Integración con Catálogo: cliente HTTP tipado gestionado por IHttpClientFactory (sin new HttpClient()).
+// Integración con Catálogo: puerto ILibroCatalogoClient (Application) implementado por
+// CatalogoHttpClient (Infrastructure), un cliente tipado gestionado por IHttpClientFactory (sin new HttpClient()).
 // La configuración se lee al arrancar para fallar pronto si falta.
 var catalogoApi = builder.Configuration.GetSection("CatalogoApi");
 var catalogoBaseUrl = catalogoApi["BaseUrl"]
     ?? throw new InvalidOperationException("Falta la configuración 'CatalogoApi:BaseUrl' en appsettings.json.");
+// Con barra final, la ruta relativa "libros/{id}" se combina bien aunque la URL incluya un prefijo (p. ej. un gateway).
+if (!catalogoBaseUrl.EndsWith('/'))
+    catalogoBaseUrl += "/";
 var catalogoTimeout = TimeSpan.FromSeconds(catalogoApi.GetValue("TimeoutSeconds", 3));
 var catalogoReintentos = catalogoApi.GetValue("Reintentos", 1); // intentos totales; 1 = sin reintentos
 
-var clienteCatalogo = builder.Services.AddHttpClient<ILibroConsultaClient, LibroConsultaClient>(cliente =>
+var clienteCatalogo = builder.Services.AddHttpClient<ILibroCatalogoClient, CatalogoHttpClient>(cliente =>
 {
     cliente.BaseAddress = new Uri(catalogoBaseUrl);
     cliente.Timeout = catalogoTimeout;

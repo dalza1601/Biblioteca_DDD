@@ -1,0 +1,216 @@
+{
+  "info": {
+    "name": "BibliotecaDDD - Comunicación Catálogo ↔ Préstamos",
+    "description": "Pruebas de la comunicación HTTP real: POST /prestamos (5102) consulta GET /libros/{id} (5101) antes de registrar.\n\nEjecutar en orden (Runner o una por una). La prueba 6 requiere detener Catalogo.Api antes de enviarla.\n\nContrato real del proyecto: los Id son int (no Guid) y el lector se envía en el campo \"lector\".",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "catalogoUrl", "value": "http://localhost:5101" },
+    { "key": "prestamosUrl", "value": "http://localhost:5102" },
+    { "key": "libroId", "value": "" },
+    { "key": "libroInexistenteId", "value": "999999" }
+  ],
+  "item": [
+    {
+      "name": "1. Crear libro (Catálogo) → 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const libro = pm.response.json();",
+              "pm.test('Libro activo', () => pm.expect(libro.activo).to.eql(true));",
+              "pm.collectionVariables.set('libroId', libro.id);",
+              "console.log('libroId guardado:', libro.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigo\": \"LIB-{{$timestamp}}\",\n  \"titulo\": \"Clean Architecture\"\n}"
+        },
+        "url": { "raw": "{{catalogoUrl}}/libros", "host": ["{{catalogoUrl}}"], "path": ["libros"] },
+        "description": "El código lleva un timestamp para poder repetir la colección sin chocar con el código único (409). Catálogo normaliza el código a LIB-XXXX."
+      }
+    },
+    {
+      "name": "2. Consultar libro (Catálogo) → 200 activo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const libro = pm.response.json();",
+              "pm.test('Mismo id', () => pm.expect(libro.id).to.eql(Number(pm.collectionVariables.get('libroId'))));",
+              "pm.test('activo = true', () => pm.expect(libro.activo).to.eql(true));",
+              "pm.test('Campos del DTO', () => pm.expect(libro).to.have.all.keys('id', 'codigo', 'titulo', 'activo'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{catalogoUrl}}/libros/{{libroId}}", "host": ["{{catalogoUrl}}"], "path": ["libros", "{{libroId}}"] }
+      }
+    },
+    {
+      "name": "3. Crear préstamo (Préstamos consulta a Catálogo) → 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const prestamo = pm.response.json();",
+              "pm.test('Préstamo del libro consultado', () => pm.expect(prestamo.libroId).to.eql(Number(pm.collectionVariables.get('libroId'))));",
+              "pm.test('Estado Activo', () => pm.expect(prestamo.estado).to.eql('Activo'));",
+              "pm.test('Encabezado X-Event-Id', () => pm.response.to.have.header('X-Event-Id'));",
+              "pm.test('Evento publicado en RabbitMQ', () => pm.expect(pm.response.headers.get('X-Event-Published')).to.eql('true'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"libroId\": {{libroId}},\n  \"lector\": \"LEC-001\",\n  \"fechaInicio\": \"2026-11-21\",\n  \"fechaLimite\": \"2026-12-05\"\n}"
+        },
+        "url": { "raw": "{{prestamosUrl}}/prestamos", "host": ["{{prestamosUrl}}"], "path": ["prestamos"] },
+        "description": "X-Event-Published = false si RabbitMQ está caído: el préstamo igual se registra (201)."
+      }
+    },
+    {
+      "name": "4a. Desactivar libro (Catálogo) → 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('activo = false', () => pm.expect(pm.response.json().activo).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": { "raw": "{{catalogoUrl}}/libros/{{libroId}}/desactivar", "host": ["{{catalogoUrl}}"], "path": ["libros", "{{libroId}}", "desactivar"] }
+      }
+    },
+    {
+      "name": "4b. Préstamo con libro desactivado → 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+              "pm.test('Cuerpo {error}', () => pm.expect(pm.response.json()).to.have.property('error'));",
+              "pm.test('No publica evento', () => pm.response.to.not.have.header('X-Event-Id'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"libroId\": {{libroId}},\n  \"lector\": \"LEC-002\",\n  \"fechaInicio\": \"2026-11-21\",\n  \"fechaLimite\": \"2026-12-05\"\n}"
+        },
+        "url": { "raw": "{{prestamosUrl}}/prestamos", "host": ["{{prestamosUrl}}"], "path": ["prestamos"] }
+      }
+    },
+    {
+      "name": "5. Préstamo con libro inexistente → 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('422 Unprocessable Entity', () => pm.response.to.have.status(422));",
+              "pm.test('Cuerpo {error}', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"libroId\": {{libroInexistenteId}},\n  \"lector\": \"LEC-003\",\n  \"fechaInicio\": \"2026-11-21\",\n  \"fechaLimite\": \"2026-12-05\"\n}"
+        },
+        "url": { "raw": "{{prestamosUrl}}/prestamos", "host": ["{{prestamosUrl}}"], "path": ["prestamos"] }
+      }
+    },
+    {
+      "name": "6. Préstamo con Catalogo.Api DETENIDO → 503",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('503 Service Unavailable', () => pm.response.to.have.status(503));",
+              "pm.test('Cuerpo {error}', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"libroId\": 1,\n  \"lector\": \"LEC-004\",\n  \"fechaInicio\": \"2026-11-21\",\n  \"fechaLimite\": \"2026-12-05\"\n}"
+        },
+        "url": { "raw": "{{prestamosUrl}}/prestamos", "host": ["{{prestamosUrl}}"], "path": ["prestamos"] },
+        "description": "ANTES de enviar: detener Catalogo.Api (Ctrl+C en su consola). Préstamos debe responder 503 y no registrar nada. Préstamos usa BaseUrl http://127.0.0.1:5101 (appsettings.Development.json): en Windows, con 'localhost', el rechazo tarda más que el timeout de 3 s y la respuesta sería 504."
+      }
+    },
+    {
+      "name": "Verificar: listar préstamos (solo el de la prueba 3)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const libroId = Number(pm.collectionVariables.get('libroId'));",
+              "const delLibro = pm.response.json().filter(p => p.libroId === libroId);",
+              "pm.test('Las pruebas fallidas no crearon préstamos', () => pm.expect(delLibro.length).to.eql(1));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{prestamosUrl}}/prestamos", "host": ["{{prestamosUrl}}"], "path": ["prestamos"] }
+      }
+    },
+    {
+      "name": "Verificar: métricas de Catálogo recibidas por RabbitMQ",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{catalogoUrl}}/metricas/prestamos-por-libro", "host": ["{{catalogoUrl}}"], "path": ["metricas", "prestamos-por-libro"] },
+        "description": "Catálogo cuenta los eventos prestamo.registrado que consume de RabbitMQ (ejecutar con Catálogo levantado)."
+      }
+    }
+  ]
+}

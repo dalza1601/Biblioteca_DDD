@@ -1,35 +1,37 @@
+using System.Diagnostics;
 using System.Net;
-using Prestamos.Api.Integrations.Catalogo.Contracts;
-using Prestamos.Api.Integrations.Catalogo.Exceptions;
+using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
+using Prestamos.Application.Contracts;
+using Prestamos.Application.Exceptions;
+using Prestamos.Application.IClients;
 
-namespace Prestamos.Api.Integrations.Catalogo.Clients;
+namespace Prestamos.Infrastructure.Clients;
 
 /// <summary>
-/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> Cliente HTTP tipado (adaptador)</para>
-/// Cliente HTTP tipado hacia Catálogo. El HttpClient lo crea y configura IHttpClientFactory
-/// (BaseAddress y Timeout vienen de appsettings.json, sección CatalogoApi).
+/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> Cliente HTTP tipado (adaptador de ILibroCatalogoClient)</para>
+/// El HttpClient lo crea y configura IHttpClientFactory (BaseAddress y Timeout desde la sección CatalogoApi).
 ///
 /// Traducción de resultados:
 ///   200            → LibroConsultaDto
 ///   404            → null (el libro no existe)
-///   5xx u otro código inesperado     → CatalogoNoDisponibleException
+///   5xx u otro código inesperado       → CatalogoNoDisponibleException
 ///   HttpRequestException (sin conexión) → CatalogoNoDisponibleException
-///   TaskCanceledException por timeout  → CatalogoTimeoutException
-///   Cancelación pedida por el cliente  → se propaga tal cual (no es un 504)
+///   TaskCanceledException por timeout   → CatalogoTimeoutException
+///   Cancelación pedida por el cliente   → se propaga tal cual (no es un 504)
 ///
-/// Sin reintentos por ahora. No envía credenciales ni reenvía tokens del usuario:
-/// la petición a Catálogo solo lleva la ruta del libro.
-/// Los mensajes de las excepciones son genéricos; el detalle técnico va solo al log.
+/// No envía credenciales ni reenvía tokens del usuario. Los mensajes de las excepciones son
+/// genéricos; el detalle técnico va solo al log.
 /// </summary>
-public sealed class LibroConsultaClient : ILibroConsultaClient
+public sealed class CatalogoHttpClient : ILibroCatalogoClient
 {
     private const string MensajeNoDisponible = "El servicio de Catálogo no está disponible.";
     private const string MensajeTimeout = "El servicio de Catálogo no respondió a tiempo.";
 
     private readonly HttpClient _httpClient;
-    private readonly ILogger<LibroConsultaClient> _logger;
+    private readonly ILogger<CatalogoHttpClient> _logger;
 
-    public LibroConsultaClient(HttpClient httpClient, ILogger<LibroConsultaClient> logger)
+    public CatalogoHttpClient(HttpClient httpClient, ILogger<CatalogoHttpClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
@@ -37,10 +39,14 @@ public sealed class LibroConsultaClient : ILibroConsultaClient
 
     public async Task<LibroConsultaDto?> ObtenerLibroAsync(int id, CancellationToken ct)
     {
+        var ruta = $"libros/{id}";
+        _logger.LogInformation("Consultando Catálogo: GET {Url}", new Uri(_httpClient.BaseAddress!, ruta));
+        var reloj = Stopwatch.StartNew();
+
         HttpResponseMessage respuesta;
         try
         {
-            respuesta = await _httpClient.GetAsync($"libros/{id}", ct);
+            respuesta = await _httpClient.GetAsync(ruta, ct);
         }
         catch (HttpRequestException ex)
         {
@@ -58,6 +64,9 @@ public sealed class LibroConsultaClient : ILibroConsultaClient
 
         using (respuesta)
         {
+            _logger.LogInformation("Catálogo respondió {StatusCode} para el libro {LibroId} en {Milisegundos} ms.",
+                (int)respuesta.StatusCode, id, reloj.ElapsedMilliseconds);
+
             switch (respuesta.StatusCode)
             {
                 case HttpStatusCode.OK:

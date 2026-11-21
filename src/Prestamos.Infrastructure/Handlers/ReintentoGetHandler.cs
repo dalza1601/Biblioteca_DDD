@@ -1,15 +1,16 @@
 using System.Net;
+using Microsoft.Extensions.Logging;
 
-namespace Prestamos.Api.Integrations.Catalogo.Handlers;
+namespace Prestamos.Infrastructure.Handlers;
 
 /// <summary>
-/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api, GET /libros/{id}) · <b>Tipo:</b> DelegatingHandler (política de reintentos GET)</para>
-/// DelegatingHandler de reintentos para el cliente de Catálogo.
+/// <para><b>Integración:</b> Catálogo (HTTP → Catalogo.Api) · <b>Tipo:</b> DelegatingHandler (política de reintentos GET)</para>
 ///   - Reintenta SOLO peticiones GET (idempotentes) cuando hubo HttpRequestException o respuesta 5xx.
 ///   - Máximo 3 intentos en total, con backoff exponencial entre intentos: 200 ms, 400 ms.
 ///   - Cualquier otro método (POST, PUT...) pasa directo, sin reintentos.
 ///   - No reintenta 4xx (p. ej. 404 es una respuesta válida) ni cancelaciones/timeouts.
 /// El Timeout del HttpClient cubre todos los intentos juntos, no cada uno por separado.
+/// Se registra solo si CatalogoApi:Reintentos > 1 (apagado por defecto).
 /// </summary>
 public sealed class ReintentoGetHandler : DelegatingHandler
 {

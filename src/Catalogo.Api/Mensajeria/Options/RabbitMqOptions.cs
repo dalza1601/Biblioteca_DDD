@@ -23,4 +23,11 @@ public sealed class RabbitMqOptions
 
     /// <summary>Mensajes entregados sin confirmar como máximo (BasicQos).</summary>
     public ushort Prefetch { get; set; } = 10;
+
+    /// <summary>
+    /// SOLO PARA PRUEBAS. Cantidad de entregas en las que el consumidor simula una caída
+    /// después de procesar el mensaje y antes del ACK (el mensaje se reentrega como Redelivered).
+    /// 0 = desactivado (valor por defecto).
+    /// </summary>
+    public int CaidasAntesDeAck { get; set; }
 }

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\Catalogo.Domain\Catalogo.Domain.csproj" />
     <ProjectReference Include="..\..\src\Prestamos.Domain\Prestamos.Domain.csproj" />
     <ProjectReference Include="..\..\src\Prestamos.Api\Prestamos.Api.csproj" />
+    <ProjectReference Include="..\..\src\Catalogo.Api\Catalogo.Api.csproj" />
   </ItemGroup>
 
 </Project>

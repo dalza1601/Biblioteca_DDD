@@ -1,13 +1,13 @@
-using Prestamos.Api.Integrations.Catalogo.Clients;
-using Prestamos.Api.Integrations.Catalogo.Contracts;
+using Prestamos.Application.IClients;
+using Prestamos.Application.Contracts;
 
 namespace Biblioteca.Tests.Integracion;
 
 /// <summary>
-/// Fake de ILibroConsultaClient: no hace HTTP. Devuelve un libro fijo (o null) o lanza una excepción,
+/// Fake de ILibroCatalogoClient: no hace HTTP. Devuelve un libro fijo (o null) o lanza una excepción,
 /// y registra cada consulta recibida para poder verificar si el caso de uso llamó o no a Catálogo.
 /// </summary>
-internal sealed class LibroConsultaClientFake : ILibroConsultaClient
+internal sealed class LibroConsultaClientFake : ILibroCatalogoClient
 {
     private readonly LibroConsultaDto? _libro;
     private readonly Exception? _excepcion;

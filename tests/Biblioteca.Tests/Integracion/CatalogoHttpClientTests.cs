@@ -1,20 +1,20 @@
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
-using Prestamos.Api.Integrations.Catalogo.Clients;
-using Prestamos.Api.Integrations.Catalogo.Contracts;
-using Prestamos.Api.Integrations.Catalogo.Exceptions;
+using Prestamos.Infrastructure.Clients;
+using Prestamos.Application.Contracts;
+using Prestamos.Application.Exceptions;
 
 namespace Biblioteca.Tests.Integracion;
 
 /// <summary>
 /// Pruebas del cliente HTTP hacia Catálogo con un HandlerFalso: no se usa la red ni servicios reales.
 /// </summary>
-public class LibroConsultaClientTests
+public class CatalogoHttpClientTests
 {
     private static readonly Uri UrlCatalogoFalsa = new("http://catalogo.test/");
 
-    private static (LibroConsultaClient Cliente, HandlerFalso Handler) CrearCliente(
+    private static (CatalogoHttpClient Cliente, HandlerFalso Handler) CrearCliente(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder,
         TimeSpan? timeout = null)
     {
@@ -25,7 +25,7 @@ public class LibroConsultaClientTests
             Timeout = timeout ?? TimeSpan.FromSeconds(10)
         };
 
-        return (new LibroConsultaClient(httpClient, NullLogger<LibroConsultaClient>.Instance), handler);
+        return (new CatalogoHttpClient(httpClient, NullLogger<CatalogoHttpClient>.Instance), handler);
     }
 
     private static Task<HttpResponseMessage> Responder(HttpStatusCode codigo, string? json = null) =>

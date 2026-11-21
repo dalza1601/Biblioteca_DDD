@@ -14,6 +14,8 @@ namespace Catalogo.Api.Mensajeria.Consumers;
 ///   - autoAck = false: confirma cada mensaje después de procesarlo.
 ///     Procesado, duplicado o inválido (ya quedó en cuarentena) → ack.
 ///     Excepción inesperada → nack; se reencola una sola vez (si ya fue reentregado, se descarta).
+///   - Opción de prueba RabbitMq:CaidasAntesDeAck = N: las primeras N entregas simulan una caída
+///     después de procesar y antes del ACK (nack con requeue) para comprobar la idempotencia.
 ///   - Si RabbitMQ no está disponible al arrancar, reintenta cada 5 s sin detener la API.
 ///     Una vez conectado, la recuperación automática del cliente restablece conexión y consumidor.
 /// </summary>
@@ -27,6 +29,7 @@ public sealed class PrestamoRegistradoConsumer : BackgroundService
 
     private IConnection? _conexion;
     private IChannel? _canal;
+    private int _caidasSimuladas;
 
     public PrestamoRegistradoConsumer(
         IOptions<RabbitMqOptions> opciones,
@@ -102,7 +105,21 @@ public sealed class PrestamoRegistradoConsumer : BackgroundService
         try
         {
             // Body solo es válido durante este manejador: se copia antes de procesar.
-            _procesador.Procesar(entrega.Body.ToArray());
+            var resultado = _procesador.Procesar(entrega.Body.ToArray(), entrega.Redelivered);
+
+            if (DebeSimularCaida(out var caida))
+            {
+                // Simulación: el efecto ya se aplicó, pero el ACK nunca llega. Se devuelve el mensaje
+                // a la cola (como haría el broker si el consumidor muriera) y RabbitMQ lo reentrega
+                // marcado como Redelivered. La idempotencia del procesador evita contarlo dos veces.
+                _logger.LogWarning(
+                    "SIMULACIÓN {Caida}/{Total}: caída después de procesar ({Resultado}) y antes del ACK; " +
+                    "el mensaje {DeliveryTag} se reentregará.",
+                    caida, _opciones.CaidasAntesDeAck, resultado, entrega.DeliveryTag);
+                await canal.BasicNackAsync(entrega.DeliveryTag, multiple: false, requeue: true);
+                return;
+            }
+
             await canal.BasicAckAsync(entrega.DeliveryTag, multiple: false);
         }
         catch (Exception ex)
@@ -112,6 +129,17 @@ public sealed class PrestamoRegistradoConsumer : BackgroundService
                 entrega.DeliveryTag, reencolar);
             await canal.BasicNackAsync(entrega.DeliveryTag, multiple: false, requeue: reencolar);
         }
+    }
+
+    /// <summary>Consume una de las caídas simuladas configuradas en CaidasAntesDeAck (si quedan).</summary>
+    private bool DebeSimularCaida(out int caida)
+    {
+        caida = 0;
+        if (_opciones.CaidasAntesDeAck <= 0)
+            return false;
+
+        caida = Interlocked.Increment(ref _caidasSimuladas);
+        return caida <= _opciones.CaidasAntesDeAck;
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

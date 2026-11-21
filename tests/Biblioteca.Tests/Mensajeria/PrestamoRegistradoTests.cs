@@ -2,10 +2,29 @@ using System.Text;
 using System.Text.Json;
 using Prestamos.Api.Integrations.Mensajeria.Events;
 
-namespace Biblioteca.Tests.Integracion;
+namespace Biblioteca.Tests.Mensajeria;
 
 public class PrestamoRegistradoTests
 {
+    [Fact]
+    public void El_contrato_se_serializa_con_cinco_campos_camelCase_fecha_UTC_y_sin_datos_del_lector()
+    {
+        var evento = PrestamoRegistrado.Crear(prestamoId: 12, libroId: 4);
+
+        using var json = JsonDocument.Parse(evento.Serializar());
+        var campos = json.RootElement.EnumerateObject().Select(p => p.Name).ToArray();
+
+        Assert.Equal(["eventoId", "prestamoId", "libroId", "fechaRegistroUtc", "version"], campos);
+        Assert.All(campos, campo => Assert.True(char.IsLower(campo[0]), $"'{campo}' no está en camelCase"));
+
+        var fecha = json.RootElement.GetProperty("fechaRegistroUtc").GetString()!;
+        Assert.EndsWith("Z", fecha); // UTC explícito
+        Assert.Equal(DateTimeKind.Utc, json.RootElement.GetProperty("fechaRegistroUtc").GetDateTime().ToUniversalTime().Kind);
+
+        Assert.DoesNotContain("lector", json.RootElement.GetRawText(), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EST-", json.RootElement.GetRawText(), StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void Crear_genera_un_EventoId_nuevo_hora_UTC_actual_y_version_1()
     {

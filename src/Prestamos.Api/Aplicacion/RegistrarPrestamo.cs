@@ -1,9 +1,8 @@
-using Prestamos.Api.Integrations.Catalogo.Clients;
-using Prestamos.Api.Integrations.Catalogo.Contracts;
-using Prestamos.Api.Integrations.Catalogo.Exceptions;
+using Prestamos.Application.IClients;
+using Prestamos.Application.Contracts;
+using Prestamos.Application.Exceptions;
 using Prestamos.Api.Integrations.Mensajeria.Events;
 using Prestamos.Api.Integrations.Mensajeria.Publishers;
-using Prestamos.Application.Contracts;
 using Prestamos.Application.IRepository;
 using Prestamos.Application.Mappers;
 using Prestamos.Domain.Entities;
@@ -29,13 +28,13 @@ public sealed class RegistrarPrestamo
 {
     public static readonly TimeSpan TimeoutPublicacion = TimeSpan.FromSeconds(4);
 
-    private readonly ILibroConsultaClient _catalogo;
+    private readonly ILibroCatalogoClient _catalogo;
     private readonly IRepositorioPrestamos _repositorio;
     private readonly IEventPublisher _publicador;
     private readonly ILogger<RegistrarPrestamo> _logger;
 
     public RegistrarPrestamo(
-        ILibroConsultaClient catalogo,
+        ILibroCatalogoClient catalogo,
         IRepositorioPrestamos repositorio,
         IEventPublisher publicador,
         ILogger<RegistrarPrestamo> logger)
