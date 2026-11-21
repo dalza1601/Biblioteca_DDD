@@ -1,0 +1,35 @@
+# RabbitMQ para desarrollo local de Biblioteca_DDD.
+# Equivale a:
+#   docker run -d --name biblioteca-rabbitmq --hostname biblioteca-rabbitmq \
+#     -p 5672:5672 -p 15672:15672 rabbitmq:4-management
+#
+# Uso:   docker compose up -d        Panel: http://localhost:15672
+#        docker compose down         (agrega -v para borrar también los datos)
+#
+# Credenciales: por defecto guest/guest (solo se aceptan desde localhost).
+# Para cambiarlas, crea un archivo .env (ya está en .gitignore, no se sube al repositorio):
+#   RABBITMQ_USER=biblioteca
+#   RABBITMQ_PASSWORD=una-clave-local
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management          # incluye el plugin rabbitmq_management (panel web)
+    container_name: biblioteca-rabbitmq
+    hostname: biblioteca-rabbitmq         # fijo: RabbitMQ guarda sus datos por nombre de nodo
+    ports:
+      - "5672:5672"                       # AMQP: lo usan las aplicaciones (publicar/consumir)
+      - "15672:15672"                     # Panel web de administración y API HTTP
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq   # conserva colas y mensajes persistentes entre reinicios
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
